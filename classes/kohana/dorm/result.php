@@ -14,10 +14,52 @@ abstract class Kohana_DORM_Result
 		$this->_meta = $meta;
 	}
 
-	public function as_array($key = NULL, $value = NULL)
+	public function as_array($key_field_name = NULL, $value_field_name = NULL)
 	{
-		// @todo run through model field
-		return $this->_result->as_array();
+		$result = array();
+
+		if ($key_field_name === NULL AND $value_field_name === NULL)
+		{
+			// Return an array containing each result row in its entirety.
+			foreach ($this as $row)
+			{
+				$result[] = $row;
+			}
+		}
+
+		elseif ($key_field_name !== NULL AND $value_field_name === NULL)
+		{
+			// Array containing each row with value of $key_field_name field
+			// as keys.
+			foreach ($this as $row)
+			{
+				$result[(string) $row->get($key_field_name)] = $row;
+			}
+		}
+
+		elseif ($key_field_name === NULL AND $value_field_name !== NULL)
+		{
+			// Array containing the value of $value_field_name field for each
+			// row.
+			foreach ($this as $row)
+			{
+				$result[] = $row->get($value_field_name);
+			}
+		}
+
+		elseif ($key_field_name !== NULL AND $value_field_name !== NULL)
+		{
+			// Array containing $row[$key] => $row[$value] pairs
+			foreach ($this as $row)
+			{
+				$key = (string) $row->get($key_field_name);
+				$value = $row->get($value_field_name);
+				$result[$key] = $value;
+			}
+		}
+
+		return $result;
+
 	}
 
 	public function get($field, $default = NULL)
