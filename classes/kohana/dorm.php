@@ -25,6 +25,7 @@ class Kohana_DORM {
 
 	/**
 	 * Returns the class name from a model name.
+	 * @todo: change name to model_class
 	 */
 	public static function class_name($model_name)
 	{
@@ -46,6 +47,16 @@ class Kohana_DORM {
 		}
 
 		return $class_name;
+	}
+
+	/**
+	 * Returns the name of the class for the given field.
+	 * @param string
+	 * @return string
+	 */
+	public static function field_class($field)
+	{
+		return 'Dorm_Field_' . $field;
 	}
 
 	public static function register($model_name)

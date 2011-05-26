@@ -45,8 +45,10 @@ class Kohana_DORM_Meta {
 		// Setter
 		else
 		{
-			$field_class = 'DORM_Field';
-			$this->fields[$field_name] = new $field_class($field_type, $options);
+			// @todo: move this to Dorm_Field::factory?
+			$field_class = Dorm::field_class($field_type);
+
+			$this->fields[$field_name] = new $field_class($options);
 
 			return $this;
 		}

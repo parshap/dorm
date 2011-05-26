@@ -6,6 +6,8 @@
  * Ideas:
  *  * required options as shortcut to not_empty validation rule
  *  * every method use ->get() by default?
+ *  * should behave like static typed language - we want that level of
+ *    control for databases
  */
 abstract class Kohana_DORM_Field {
 
@@ -13,10 +15,8 @@ abstract class Kohana_DORM_Field {
 
 	public $rules = array();
 
-	public function __construct($type, $options)
+	public function __construct($options)
 	{
-		$this->_type = $type;
-
 		foreach ($options as $field => $value)
 		{
 			$this->$field = $value;
@@ -29,7 +29,7 @@ abstract class Kohana_DORM_Field {
 	}
 
 	/**
-	 * Called when retrieving the value of this field (e.g., from a model).
+	 * Called when retrieving the value of a model's field.
 	 */
 	public function get($value)
 	{
@@ -37,7 +37,7 @@ abstract class Kohana_DORM_Field {
 	}
 
 	/**
-	 * Called when setting the value of this field (in the context of a model).
+	 * Called when setting the value of a model's field.
 	 */
 	public function set($value)
 	{
@@ -45,19 +45,23 @@ abstract class Kohana_DORM_Field {
 	}
 
 	/**
-	 * Called when loading the value from a persisted result.
+	 * Called to get the value of the field when loading from a persisted data
+	 * store result.
 	 */
 	public function load($value)
 	{
-		// By default, we can just use the field's set method
+		// By default, we can just use the field's set method (to "set" the
+		// value to the data store result).
 		return $this->set($value);
 	}
 
 	/**
-	 * Called when persisting the field.
+	 * Called to get the value to persist into the data store.
 	 */
 	public function save($value)
 	{
-		return $value;
+		// By default we can just use the field's get method (to "get" the
+		// value that should be saved to the data store).
+		return $this->get($value);
 	}
 }
