@@ -73,18 +73,23 @@ class Kohana_DORM_Model extends Model {
 
 	public function get($field_name)
 	{
-		if (isset($this->_values[$field_name]))
+		// Get the value of the field
+		$value = Arr::get($this->_values, $field_name);
+
+		if ($value === NULL)
 		{
-			$value = $this->_values[$field_name];
-
-			// Process the value using the field's get method
-			if ($field = $this->_meta->field($field_name))
-			{
-				$value = $field->get($value);
-			}
-
-			return $value;
+			// No value for this field
+			return NULL;
 		}
+
+		if ($field = $this->_meta->field($field_name))
+		{
+			// If the field is defined, process the value using the field
+			// object's `get` method.
+			$value = $field->get($value);
+		}
+
+		return $value;
 	}
 
 	public function set(array $values)
@@ -99,6 +104,12 @@ class Kohana_DORM_Model extends Model {
 		// Process values using the field's set method
 		foreach ($values as $field_name => $value)
 		{
+			if ($value === NULL)
+			{
+				// All fields can simply be set to NULL
+				continue;
+			}
+
 			if ($field = $this->_meta->field($field_name))
 			{
 				$values[$field_name] = $field->set($value);
