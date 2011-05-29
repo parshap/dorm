@@ -66,6 +66,13 @@ class Kohana_DORM_Model extends Model {
 		}
 	}
 
+	/**
+	 * Returns the primary key of the model. If no primary key field exists
+	 * or it does not have a value (e.g., new unsaved model), NULL is
+	 * returned.
+	 *
+	 * @return mixed Model's primary key
+	 */
 	public function id()
 	{
 		return $this->get('_id');
@@ -76,9 +83,18 @@ class Kohana_DORM_Model extends Model {
 		// Get the value of the field
 		$value = Arr::get($this->_values, $field_name);
 
+		// Get the field object (if it is defined)
+		$field = $this->_meta->field($field_name);
+
+		// The field's value is not set
 		if ($value === NULL)
 		{
-			// No value for this field
+			// If the field is defined, return its default value
+			if ($field)
+			{
+				return $field->default;
+			}
+
 			return NULL;
 		}
 

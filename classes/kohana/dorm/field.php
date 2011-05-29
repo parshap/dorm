@@ -13,7 +13,16 @@ abstract class Kohana_DORM_Field {
 
 	protected $_type;
 
+	/**
+	 * @var The validation rules for this field
+	 */
 	public $rules = array();
+
+	/**
+	 * @var The default value for this field. This value is used when a
+	 * model's field value is not set.
+	 */
+	public $default = NULL;
 
 	public function __construct($options)
 	{
