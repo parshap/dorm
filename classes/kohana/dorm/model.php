@@ -283,6 +283,10 @@ class Kohana_DORM_Model extends Model {
 			}
 		}
 
+		// Bind :model parameters to this model so the validation callback
+		// can have access to the model.
+		$data->bind(':model', $this);
+
 		if ( ! $data->check())
 		{
 			throw new DORM_Validation_Exception($this, $data);
