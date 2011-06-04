@@ -90,6 +90,10 @@ class Kohana_DORM_Model extends Model {
 		if ($value === NULL)
 		{
 			// If the field is defined, return its default value
+
+			// @todo: getting defaults this way makes it impossible to "unset"
+			// the field (i.e., set it to NULL) and difficult to implement
+			// isset and unset.
 			if ($field)
 			{
 				return $field->default;
