@@ -58,6 +58,23 @@ class Kohana_DORM_Query {
 		return $this;
 	}
 
+	public function where($field_name, $operator, $operand = NULL)
+	{
+		if ($operator === '=')
+		{
+			// Apply the model's field's ->save() method to compare with the
+			// value that would be saved into the data store.
+			if ($field = $this->_meta->field($field_name))
+			{
+				$operand = $field->save($operand);
+			}
+		}
+
+		$this->_query->where($field_name, $operator, $operand);
+
+		return $this;
+	}
+
 	public function execute()
 	{
 		$result = $this->_query->execute();
