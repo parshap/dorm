@@ -272,7 +272,15 @@ class Kohana_DORM_Model extends Model {
 	 */
 	public function validate()
 	{
-		$data = Validation::factory($this->_values);
+		// Build the validation data
+		$data = array();
+
+		foreach ($this->_meta->fields as $field_name => $field)
+		{
+			$data[$field_name] = $this->get($field_name);
+		}
+
+		$data = Validation::factory($data);
 
 		// Add rules
 		foreach ($this->_meta->fields as $field_name => $field)
