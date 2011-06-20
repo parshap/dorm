@@ -21,6 +21,8 @@ class Kohana_DORM_Model extends Model {
 	{
 		$this->_meta = DORM::meta($this);
 
+		$this->reset();
+
 		if ($id !== NULL)
 		{
 			// DORM::retrieve($this)
@@ -75,6 +77,7 @@ class Kohana_DORM_Model extends Model {
 	 */
 	public function id()
 	{
+		// @todo: _id should not be hard-coded (mongo-specific)
 		return $this->get('_id');
 	}
 
@@ -83,22 +86,9 @@ class Kohana_DORM_Model extends Model {
 		// Get the value of the field
 		$value = Arr::get($this->_values, $field_name);
 
-		// Get the field object (if it is defined)
-		$field = $this->_meta->field($field_name);
-
 		// The field's value is not set
 		if ($value === NULL)
 		{
-			// If the field is defined, return its default value
-
-			// @todo: getting defaults this way makes it impossible to "unset"
-			// the field (i.e., set it to NULL) and difficult to implement
-			// isset and unset.
-			if ($field)
-			{
-				return $field->default;
-			}
-
 			return NULL;
 		}
 
@@ -170,6 +160,12 @@ class Kohana_DORM_Model extends Model {
 		$this->_changed =
 		$this->_changes = array();
 
+		// Initialize values to field defaults
+		foreach ($this->_meta->fields as $name => $field)
+		{
+			$this->_values[$name] = $field->default;
+		}
+
 		return $this;
 	}
 
@@ -183,16 +179,15 @@ class Kohana_DORM_Model extends Model {
 	 */
 	public function load_values(array $values)
 	{
+		$this->reset();
+
 		foreach ($values as $field_name => $value)
 		{
 			if ($field = $this->_meta->field($field_name))
 			{
-				$values[$field_name] = $field->load($value);
+				$this->_values[$field_name] = $field->load($value);
 			}
 		}
-
-		$this->reset();
-		$this->_values = $values;
 
 		return $this;
 	}
@@ -290,7 +285,6 @@ class Kohana_DORM_Model extends Model {
 				$callback = Arr::get($rule, 0);
 				$params = Arr::get($rule, 1);
 
-				// @todo: pass field value as first param by default?
 				$data->rule($field_name, $callback, $params);
 			}
 		}
