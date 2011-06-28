@@ -5,7 +5,8 @@
  *
  * Ideas:
  *  * `field` method as read-only shortcut to $this->_meta->field
- *  * better separation of data mapping and data access layers.
+ *  * better separation of data mapping and data access layers
+ *  * more DRY calls to $field->get/set/save/load and handling of NULL values
  */
 class Kohana_DORM_Model extends Model {
 
@@ -16,6 +17,11 @@ class Kohana_DORM_Model extends Model {
 	protected $_changes = array();
 
 	protected $_meta;
+
+	public static function initialize($meta)
+	{
+		// For sub classes
+	}
 
 	public function __construct($id = NULL)
 	{
@@ -104,14 +110,7 @@ class Kohana_DORM_Model extends Model {
 
 	public function set(array $values)
 	{
-		// Save the change history
-		foreach ($values as $field => $value)
-		{
-			$this->_changed[$field] = TRUE;
-			$this->_changes[$field][] = $value;
-		}
-
-		// Process values using the field's set method
+		// Apply the field's ->set method
 		foreach ($values as $field_name => $value)
 		{
 			if ($value === NULL)
@@ -126,6 +125,27 @@ class Kohana_DORM_Model extends Model {
 			}
 		}
 
+		// Remove values that are not actually changing
+		foreach ($values as $field_name => $value)
+		{
+			if ($value !== Arr::get($this->_values, $field_name))
+			{
+				// Equality problems with MongoId objects ... maybe we should
+				// store keys as strings?
+				continue;
+			}
+
+			unset($values[$field_name]);
+		}
+
+		// Save the change history
+		foreach ($values as $field_name => $value)
+		{
+			$this->_changed[$field_name] = TRUE;
+			$this->_changes[$field_name][] = $value;
+		}
+
+		// Set the values!
 		$this->_values = $values + $this->_values;
 
 		return $this;
@@ -163,7 +183,12 @@ class Kohana_DORM_Model extends Model {
 		// Initialize values to field defaults
 		foreach ($this->_meta->fields as $name => $field)
 		{
-			$this->_values[$name] = $field->default;
+			$value = $field->default;
+
+			$this->_values[$name] = $value;
+
+			// Set the initial state of this field in the changes tracking
+			$this->_changes[$name] = array($value);
 		}
 
 		return $this;
@@ -181,11 +206,21 @@ class Kohana_DORM_Model extends Model {
 	{
 		$this->reset();
 
-		foreach ($values as $field_name => $value)
+		foreach ($values as $name => $value)
 		{
-			if ($field = $this->_meta->field($field_name))
+			if ($value === NULL)
 			{
-				$this->_values[$field_name] = $field->load($value);
+				continue;
+			}
+
+			if ($field = $this->_meta->field($name))
+			{
+				$value = $field->load($value);
+
+				$this->_values[$name] = $value;
+
+				// Set the initial state of this field in the changes tracking
+				$this->_changes[$name] = array($value);
 			}
 		}
 
@@ -213,27 +248,55 @@ class Kohana_DORM_Model extends Model {
 		return (bool) $this->id();
 	}
 
+	/**
+	 * Returns the values to be used to save this model.
+	 */
+	protected function _get_save_values()
+	{
+		// Is this a create or update operation?
+		$is_create = ! $is_update = $this->loaded();
+
+		$values = array();
+
+		foreach ($this->_meta->fields as $name => $field)
+		{
+			// When creating, primary fields should not be included unless
+			// they have been changed.
+			if ($is_create
+				and $field instanceof Dorm_Field_Key
+				and $field->primary
+				and ! $this->changed($name) )
+			{
+				continue;
+			}
+
+			// When updating, only changed fields should be included
+			if ($is_update AND ! $this->changed($name))
+			{
+				continue;
+			}
+
+			$value = Arr::get($this->_values, $name);
+
+			if ($value !== NULL)
+			{
+				$value = $field->save($value);
+			}
+
+			$values[$name] = $value;
+		}
+
+		// @todo: Add "unmapped" values?
+
+		return $values;
+	}
+
 	public function save()
 	{
 		// Perform validation before doing anything
 		$this->validate();
 
-		// Use the values that have changed to save.
-		// In a new model, this will be all the fields!
-		$values = Arr::extract(
-			$this->_values,
-			array_keys($this->_changed)
-		);
-
-		// Process values using its fields' save method to prepare it
-		// for saving to the data layer.
-		foreach ($values as $field_name => $value)
-		{
-			if ($field = $this->_meta->field($field_name))
-			{
-				$values[$field_name] = $field->save($value);
-			}
-		}
+		$values = $this->_get_save_values();
 
 		// Create
 		if ( ! $this->loaded())
@@ -243,6 +306,7 @@ class Kohana_DORM_Model extends Model {
 				->set($values)
 				->execute();
 
+			// @todo: _id is mongo-specific
 			$this->set(array('_id' => $id));
 		}
 
@@ -290,9 +354,10 @@ class Kohana_DORM_Model extends Model {
 		}
 
 		// Bind :model parameters to this model so the validation callback
-		// can have access to the model.
+		// can have access to the model
 		$data->bind(':model', $this);
 
+		// If the data does not validate, throw an exception
 		if ( ! $data->check())
 		{
 			throw new DORM_Validation_Exception($this, $data);
@@ -301,8 +366,11 @@ class Kohana_DORM_Model extends Model {
 
 	public function delete()
 	{
+		// @todo: mongo-specific
 		DORM::delete($this)
 			->where('_id', '=', $this->id())
 			->execute();
+
+		unset($this->_id);
 	}
 }
