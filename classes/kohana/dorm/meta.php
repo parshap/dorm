@@ -45,7 +45,7 @@ class Kohana_DORM_Meta {
 		// Setter
 		else
 		{
-			$this->fields[$name] = Dorm_Field::factory($name, $type, $options);
+			$this->fields[$name] = Dorm_Field::factory($type, $name, $options);
 
 			return $this;
 		}

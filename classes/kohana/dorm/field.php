@@ -32,6 +32,13 @@ abstract class Kohana_DORM_Field {
 	 */
 	public $default = NULL;
 
+	public static function factory($type, $name, $options = array())
+	{
+		$class = Dorm::field_class($type);
+
+		return new $class($name, $options);
+	}
+
 	public function __construct($name, $options = array())
 	{
 		$this->name = $name;
