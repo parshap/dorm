@@ -322,6 +322,8 @@ class Kohana_DORM_Model extends Model {
 		// Reset changed values since last save.
 		$this->_changed = array();
 		$this->_changes = array();
+
+		return $this;
 	}
 
 	/**
