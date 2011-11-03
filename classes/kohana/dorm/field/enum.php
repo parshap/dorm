@@ -7,9 +7,9 @@ abstract class Kohana_Dorm_Field_Enum extends Dorm_Field {
 	 */
 	public $values = array();
 
-	public function __construct($options)
+	public function __construct($name, $options)
 	{
-		parent::__construct($options);
+		parent::__construct($name, $options);
 
 		$this->rules[] = array('in_array', array(':value', $this->values));
 	}

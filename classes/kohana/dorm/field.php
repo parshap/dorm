@@ -11,7 +11,15 @@
  */
 abstract class Kohana_DORM_Field {
 
-	protected $_type;
+	/**
+	 * @var This field's name
+	 */
+	public $name = NULL;
+
+	/**
+	 * @var A human-friendly label for this field
+	 */
+	public $label = NULL;
 
 	/**
 	 * @var The validation rules for this field
@@ -24,17 +32,19 @@ abstract class Kohana_DORM_Field {
 	 */
 	public $default = NULL;
 
-	public function __construct($options)
+	public function __construct($name, $options = array())
 	{
+		$this->name = $name;
+
 		foreach ($options as $field => $value)
 		{
 			$this->$field = $value;
 		}
-	}
 
-	public function type()
-	{
-		return $_type;
+		if ( ! $this->label)
+		{
+			$this->label = ucwords(Inflector::humanize($this->name));
+		}
 	}
 
 	/**

@@ -34,21 +34,18 @@ class Kohana_DORM_Meta {
 	 * Returns the specified field. Throws an exception if the field does not
 	 * exist.
 	 */
-	public function field($field_name, $field_type = NULL, $options = array())
+	public function field($name, $type = NULL, $options = array())
 	{
 		// Getter
-		if ($field_type === NULL)
+		if ($type === NULL)
 		{
-			return Arr::get($this->fields, $field_name);
+			return Arr::get($this->fields, $name);
 		}
 
 		// Setter
 		else
 		{
-			// @todo: move this to Dorm_Field::factory?
-			$field_class = Dorm::field_class($field_type);
-
-			$this->fields[$field_name] = new $field_class($options);
+			$this->fields[$name] = Dorm_Field::factory($name, $type, $options);
 
 			return $this;
 		}
