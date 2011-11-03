@@ -171,6 +171,11 @@ class Kohana_DORM_Model extends Model {
 		return isset($this->_changed[$field]);
 	}
 
+	public function meta()
+	{
+		return $this->_meta;
+	}
+
 	/**
 	 * Resets the state of this model
 	 */
