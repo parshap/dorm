@@ -50,7 +50,11 @@ abstract class Kohana_DORM_Field {
 
 		if ( ! $this->label)
 		{
-			$this->label = ucwords(Inflector::humanize($this->name));
+			$this->label = ucwords(
+				Inflector::humanize(
+					str_replace('_id', '', $this->name)
+				)
+			);
 		}
 	}
 
