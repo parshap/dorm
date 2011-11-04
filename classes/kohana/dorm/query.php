@@ -8,6 +8,8 @@ class Kohana_DORM_Query {
 
 	protected $_type;
 
+	protected $_scopes = array();
+
 	protected $_is_single = FALSE;
 
 	public function __construct(DORM_Meta $meta, $type)
@@ -49,6 +51,45 @@ class Kohana_DORM_Query {
 		return $this;
 	}
 
+	/**
+	 * Returns the meta object of the model we are querying
+	 */
+	public function meta()
+	{
+		return $this->_meta;
+	}
+
+	public function scope($name)
+	{
+		if ( ! $this->_query instanceof Datastore_Query_Where)
+		{
+			throw new Kohana_Exception(
+				'This type of query cannot be scoped'
+			);
+		}
+
+		$this->_scopes[$name] = TRUE;
+	}
+
+	public function unscope($name = NULL)
+	{
+		// Remove all scopes
+		if ($name === NULL)
+		{
+			$this->_scopes = array();
+		}
+
+		// Remove a single named scope
+		else
+		{
+			unset($this->_scopes[$name]);
+		}
+
+		return $this;
+	}
+
+	// @TODO: Wish limit was a getter as well - we need a way to get query
+	// object state
 	public function limit($number)
 	{
 		$this->_query->limit($number);
@@ -84,8 +125,19 @@ class Kohana_DORM_Query {
 
 	public function execute()
 	{
+		// Apply any scopes
+		foreach ($this->_scopes as $scope => $active)
+		{
+			if ($active)
+			{
+				$this->_apply_scope($scope);
+			}
+		}
+
+		// Execute the query
 		$result = $this->_query->execute();
 
+		// Return the results
 		switch ($this->_type)
 		{
 			case Datastore::RETRIEVE:
@@ -106,5 +158,20 @@ class Kohana_DORM_Query {
 			default:
 				return $result;
 		}
+	}
+
+	protected function _apply_scope($name)
+	{
+		if ($callback = $this->_meta->scope($name))
+		{
+			// Pass along any parameters, except replacing the first parameter
+			// (the scope's name) with the query object the scope must modify
+			$params = func_get_args();
+			$params[0] = $this;
+
+			call_user_func_array($callback, $params);
+		}
+
+		return $this;
 	}
 }

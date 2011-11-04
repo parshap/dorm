@@ -15,6 +15,8 @@ class Kohana_DORM_Meta {
 
 	protected $_query_class = 'DORM_Query';
 
+	protected $_scopes = array();
+
 	public $fields = array();
 
 	public function __construct($model_name)
@@ -79,6 +81,23 @@ class Kohana_DORM_Meta {
 		else
 		{
 			$this->_query_class = $class;
+		}
+
+		return $this;
+	}
+
+	public function scope($name, $callback = NULL)
+	{
+		// Getter
+		if ($callback === NULL)
+		{
+			return Arr::get($this->_scopes, $name);
+		}
+
+		// Setter
+		else
+		{
+			$this->_scopes[$name] = $callback;
 		}
 
 		return $this;
