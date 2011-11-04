@@ -13,6 +13,8 @@ class Kohana_DORM_Meta {
 
 	protected $_group;
 
+	protected $_query_class = 'DORM_Query';
+
 	public $fields = array();
 
 	public function __construct($model_name)
@@ -63,6 +65,28 @@ class Kohana_DORM_Meta {
 		$this->_group = $group;
 
 		return $this;
+	}
+
+	public function query_class($class = NULL)
+	{
+		// Getter
+		if ($class === NULL)
+		{
+			return $this->_query_class;
+		}
+
+		// Setter
+		else
+		{
+			$this->_query_class = $class;
+		}
+
+		return $this;
+	}
+
+	public function query($type)
+	{
+		return new $this->_query_class($this, $type);
 	}
 
 	public function model_name()

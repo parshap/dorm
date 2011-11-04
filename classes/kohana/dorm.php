@@ -97,8 +97,7 @@ class Kohana_DORM {
 
 	protected static function _query($model, $type)
 	{
-		$meta = DORM::meta($model);
-		return new DORM_Query($meta, $type);
+		return DORM::meta($model)->query($type);
 	}
 
 	public static function create($model)
