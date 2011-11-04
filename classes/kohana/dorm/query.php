@@ -60,6 +60,13 @@ class Kohana_DORM_Query {
 
 	public function where($field_name, $operator, $operand = NULL)
 	{
+		return $this->and_where($field_name, $operator, $operand);
+	}
+
+	public function and_where($field_name, $operator, $operand = NULL)
+	{
+		// @TODO: What other cases do we need to call put the value through
+		// save()? !=
 		if ($operator === '=')
 		{
 			// Apply the model's field's ->save() method to compare with the
